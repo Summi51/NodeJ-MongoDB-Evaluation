@@ -1,19 +1,20 @@
-const router = require("express").Router();
+const express = require("express");
 
-const auth =
-require("../middleware/authMiddleware");
+const auth = require("../middleware/authMiddleware");
 
 const {
   createPost,
   getPosts,
-  getPost,
+  getSinglePost,
   updatePost,
   deletePost
 } = require("../controllers/postController");
 
+const router = express.Router();
+
 router.get("/", getPosts);
 
-router.get("/:id", getPost);
+router.get("/:id", getSinglePost);
 
 router.post("/", auth, createPost);
 

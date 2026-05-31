@@ -1,7 +1,6 @@
 const Post = require("../models/Post");
 
-exports.createPost = async (req, res) => {
-
+const createPost = async (req, res) => {
   const post = await Post.create({
     ...req.body,
     author: req.user.id
@@ -10,90 +9,85 @@ exports.createPost = async (req, res) => {
   res.status(201).json(post);
 };
 
-exports.getPosts = async (req, res) => {
+const getPosts = async (req, res) => {
+  const { tag } = req.query;
 
-  const {
-    tag,
-    page = 1,
-    limit = 5
-  } = req.query;
+  const page = Number(req.query.page) || 1;
+  const limit = Number(req.query.limit) || 5;
 
-  let filter = {};
+  const query = {};
 
   if (tag) {
-    filter.tags = tag;
+    query.tags = tag;
   }
 
-  const total =
-    await Post.countDocuments(filter);
+  const total = await Post.countDocuments(query);
 
-  const posts = await Post.find(filter)
+  const posts = await Post.find(query)
     .populate("author", "name email")
     .skip((page - 1) * limit)
-    .limit(Number(limit));
+    .limit(limit);
 
   res.json({
     total,
-    page: Number(page),
+    page,
     pages: Math.ceil(total / limit),
-    posts
+    results: posts
   });
 };
 
-exports.getPost = async (req, res) => {
-
-  const post = await Post.findById(
-    req.params.id
-  ).populate("author", "name email");
+const getSinglePost = async (req, res) => {
+  const post = await Post.findById(req.params.id)
+    .populate("author", "name email");
 
   if (!post) {
     return res.status(404).json({
-      message: "Post not found"
+      message: "Post Not Found"
     });
   }
 
   res.json(post);
 };
 
-exports.updatePost = async (req, res) => {
+const updatePost = async (req, res) => {
+  const post = await Post.findById(req.params.id);
 
-  const post =
-    await Post.findById(req.params.id);
-
-  if (!post)
+  if (!post) {
     return res.status(404).json({
-      message: "Post not found"
+      message: "Post Not Found"
     });
+  }
 
-  if (
-    post.author.toString() !== req.user.id
-  ) {
+  if (post.author.toString() !== req.user.id) {
     return res.status(403).json({
       message: "Forbidden"
     });
   }
 
-  Object.assign(post, req.body);
+  const updated = await Post.findByIdAndUpdate(
+    req.params.id,
+    req.body,
+    { new: true }
+  );
 
-  await post.save();
-
-  res.json(post);
+  res.json(updated);
 };
 
-exports.deletePost = async (req, res) => {
+const deletePost = async (req, res) => {
+  const post = await Post.findById(req.params.id);
 
-  const post =
-    await Post.findById(req.params.id);
-
-  if (!post)
+  if (!post) {
     return res.status(404).json({
-      message: "Post not found"
+      message: "Post Not Found"
     });
+  }
 
-  if (
-    post.author.toString() !== req.user.id &&
-    req.user.role !== "admin"
-  ) {
+  const owner =
+    post.author.toString() === req.user.id;
+
+  const admin = req.user.role === "admin";
+
+  if (!owner && !admin) {
     return res.status(403).json({
       message: "Forbidden"
     });
@@ -102,6 +96,14 @@ exports.deletePost = async (req, res) => {
   await post.deleteOne();
 
   res.json({
-    message: "Post deleted"
+    message: "Post Deleted"
   });
+};
+
+module.exports = {
+  createPost,
+  getPosts,
+  getSinglePost,
+  updatePost,
+  deletePost
 };
