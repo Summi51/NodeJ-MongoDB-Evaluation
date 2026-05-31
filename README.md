@@ -24,7 +24,7 @@ A simple Blog Platform Backend built using Node.js, Express.js, MongoDB, Mongoos
 Clone the repository:
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/Summi51/NodeJ-MongoDB-Evaluation.git
 ```
 
 Install dependencies:
