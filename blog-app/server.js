@@ -39,8 +39,13 @@ app.use("/api/posts", postRoutes);
 
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 5000;
+// Local Development
+if (process.env.NODE_ENV !== "production") {
+  const PORT = process.env.PORT || 8000;
 
-app.listen(PORT, () => {
-  console.log(`Server Running On ${PORT}`);
-});
+  app.listen(PORT, () => {
+    console.log(`Server Running On ${PORT}`);
+  });
+}
+
+module.exports = app;
